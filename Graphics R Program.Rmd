@@ -1,0 +1,252 @@
+---
+title: "Interactive ggplots"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+#install.packages("animint2")#from CRAN (stable).
+##OR from GitHub (development).
+#if(!require("remotes"))install.packages("remotes")
+#remotes:install_github("tdhock/animint2")
+#install.packages("remote")
+```
+
+
+```{r message=FALSE, warning=FALSE}
+library(animint2)
+library(tidyverse)
+library(janitor)
+library(here)
+library(ggmap)
+library(albersusa)
+library(skimr)
+```
+
+```{r}
+data(WorldBank, package="animint2")
+tail (WorldBank)
+```
+
+
+```{r}
+WorldBank1975 <- subset(WorldBank, year==1975)
+head(WorldBank1975)
+```
+
+
+```{r}
+
+scatter1 <- ggplot()+
+  geom_point(
+    mapping=aes(x=life.expectancy, y=fertility.rate, color=region),
+    data=WorldBank1975)
+scatter1
+
+#animint(scatter1)
+```
+
+
+```{r}
+WorldBankBefore1975 <- subset(WorldBank, 1970 <= year & year <= 1975)
+two.layers <- scatter1+
+  geom_path(aes(x=life.expectancy, y=fertility.rate, color=region,
+                group=country),
+            data=WorldBankBefore1975)
+
+two.layers
+#(viz.two.layers <- animint(two.layers)) Generates an error: 'unitType' is not an exported object from 'namespace:grid'
+```
+
+```{r}
+three.layers <- two.layers+
+  geom_text(aes(x=life.expectancy, y=fertility.rate, color=region,
+                label=country),
+            data=WorldBank1975)
+
+three.layers
+```
+
+```{r}
+two.layersstorage <- two.layers
+two.layers$timeSeries <- ggplot()+
+  geom_line(aes(x=year, y=fertility.rate, color=region, group=country),
+            data=WorldBank)
+
+two.layersstorage
+two.layers$timeSeries
+```
+
+```{r}
+add.x.var <- function(df, x.var){
+  data.frame(df, x.var=factor(x.var, c("life expectancy", "year")))
+}
+
+  scatterfirst=ggplot()+
+    geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
+               data=add.x.var(WorldBank1975, "life expectancy"))+
+    geom_path(aes(x=life.expectancy, y=fertility.rate, color=region,
+                  group=country),
+              data=add.x.var(WorldBankBefore1975, "life expectancy"))+
+    geom_line(aes(x=year, y=fertility.rate, color=region, group=country),
+              data=add.x.var(WorldBank, "year"))+theme(axis.text.x = element_text(angle = 50, hjust = 1))+
+    xlab("")+
+    facet_grid(. ~ x.var, scales="free")+
+    theme_bw()+
+    theme(panel.margin=grid::unit(0, "lines"))
+  
+  scatterfirst
+```
+
+
+
+
+```{r}
+show.point.list <- list()
+show.path.list <- list()
+for(show.year in c(1975, 1985, 1995)){
+  show.point.list[[paste(show.year)]] <- data.frame(
+    show.year, subset(WorldBank, year==show.year))
+  show.path.list[[paste(show.year)]] <- data.frame(
+    show.year, subset(WorldBank, show.year - 5 <= year & year <= show.year))
+}
+show.point <- do.call(rbind, show.point.list)
+show.path <- do.call(rbind, show.path.list)
+```
+
+
+```{r}
+threepanelsvisual <- list(
+  scatter=ggplot()+
+    geom_point(aes(x=life.expectancy, y=fertility.rate, color=region),
+               data=show.point)+
+    geom_path(aes(x=life.expectancy, y=fertility.rate, color=region,
+                  group=country),
+              data=show.path)+
+    facet_grid(. ~ show.year)+
+    theme_bw()+
+    theme(panel.margin=grid::unit(0, "lines"))
+  )
+
+threepanelsvisual
+```
+
+## Exercises
+
+Visualize a different type of data not present in the animint2 Manual. 
+
+Data Source: https://rcweb.dartmouth.edu/~f002d69/workshops/index_rspatial.html which represents sightings of grizzly bears (Ursos arctos) in Alaska. 
+
+Other data set used is from Brandell, Ellen E (2021), Serological dataset and R code for: Patterns and processes of pathogen exposure in gray wolves across North America, Dryad, (https://doi.org/10.5061/dryad.5hqbzkh51).  
+
+Load the `grizzly` data and evaluate its structure. 
+```{r}
+grizzly <- read_csv(here("data", "bear-sightings.csv")) 
+grizzly <- janitor::clean_names(grizzly)
+grizzly
+```
+
+```{r}
+glimpse(grizzly)
+summary(grizzly)
+str(grizzly)
+skim(grizzly)
+```
+
+Use the range of the latitude and longitude to build an appropriate bounding box for a map.
+```{r}
+latitude_me <- c(55.02,70.37)
+longitude_me <- c(-166.2, -131.3)
+bear_box <- make_bbox(longitude_me, latitude_me, f=0.05)
+```
+
+Load a map from `stamen` in a terrain style projection and display the map.
+```{r}
+map_projection <- get_map(bear_box, maptype = "terrain", source = "stamen")
+```
+
+```{r}
+ggmap(map_projection)
+```
+
+Build a final map that overlays the recorded observations of grizzly bears in Alaska.
+```{r}
+ggmap(map_projection) + geom_point(data = grizzly, aes(longitude,latitude), size=1, color = "blue") + labs(x = "Longitude", y= "Latitude", title = "Recorded Observations of Grizzly Bears in Alaska")
+```
+
+Exercise 2: Wolves data. Load the data and evaluate its structure.
+```{r}
+wolves <- readr::read_csv("data/wolves_data/wolves_dataset.csv")
+str(wolves)
+skim(wolves)
+str(wolves)
+```
+
+Evaluating how many distinct wolf populations are included in this study:
+```{r}
+wolves$pop <- as.factor(wolves$pop)
+n_distinct(wolves$pop)
+```
+
+```{r}
+wolves_US <- wolves %>%
+  filter(lat<=48)
+wolves_US
+```
+
+Use the `albersusa` package to make a base map of the lower 48 US states.
+```{r}
+us_lower <- usa_sf()
+```
+
+```{r}
+c_comp <- counties_sf()
+```
+
+```{r}
+ggplot() +
+  geom_sf(data=us_lower, size = 0.25) + theme_linedraw() + labs(title = "US State Boundaries")
+```
+
+Use the relimited data to plot the distribution of wolf populations in the lower 48 US states.
+
+```{r}
+ggplot() + 
+  geom_sf(data = us_lower, size = 0.125) + 
+  theme_linedraw()+
+  geom_point(data = wolves_US, aes(long, lat, color=pop), shape=2, size=4)+
+  labs(title = "Distribution of Wolf Species",
+       x = "Longitude",
+       y = "Latitude")+
+  theme_minimal()
+```
+
+
+Average pack size for the wolves in this study by region:
+```{r}
+wolves %>%
+  group_by(pop) %>%
+  summarize(avg_wolfpacksize = mean(pack.size), .groups='keep') %>%
+  arrange(desc(avg_wolfpacksize))
+```
+
+Make a new map that shows the distribution of wolves in the lower 48 US states but which has the size of location markers adjusted by pack size.
+```{r}
+wolfplot <- ggplot() +
+  geom_sf(data=us_lower, size=0.2) + 
+  geom_point(data=wolves_US, aes(long,lat,size=pack.size,color=pack.size), shape=5) + theme_minimal()+
+  labs(title = "Distribution of Wolves in Lower 48 US states by Pack Size", x = "Longitude", y="Latitude")
+
+wolfplot
+```
+
+```{r}
+
+```
+
+
+
