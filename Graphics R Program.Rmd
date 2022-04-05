@@ -42,14 +42,13 @@ head(WorldBank1975)
 
 
 ```{r}
-
 scatter1 <- ggplot()+
   geom_point(
     mapping=aes(x=life.expectancy, y=fertility.rate, color=region),
     data=WorldBank1975)
 scatter1
 
-#animint(scatter1)
+# animint2gist(animint(scatter1))  # Creates bl.ocks.org visual to display scatter1. 
 ```
 
 
@@ -61,8 +60,37 @@ two.layers <- scatter1+
             data=WorldBankBefore1975)
 
 two.layers
-#(viz.two.layers <- animint(two.layers)) Generates an error: 'unitType' is not an exported object from 'namespace:grid'
+#(viz.two.layers <- animint(two.layers))
+#animint2gist(viz.two.layers)
 ```
+
+
+## Exercise: Switch fertility.rate and life.expectancy. 
+This requires us to create a different scatter plot, which we'll name scatterswitched.
+```{r}
+scatterswitched <- ggplot()+
+  geom_point(
+    mapping=aes(x=fertility.rate, y=life.expectancy, color=region),
+    data=WorldBank1975)
+scatterswitched
+
+# animint2gist(animint(scatterswitched))  # Creates bl.ocks.org visual to display scatterswitched.
+```
+
+## Exercise continued: Here is the flipped scatterplot. 
+
+```{r}
+WorldBankBefore1975 <- subset(WorldBank, 1970 <= year & year <= 1975)
+two.layers.switched <- scatterswitched+
+  geom_path(aes(x=fertility.rate, y=life.expectancy, color=region,
+                group=country),
+            data=WorldBankBefore1975)
+
+two.layers.switched
+#(viz.two.layers.switched <- animint(two.layers.switched))
+#animint2gist(viz.two.layers.switched)
+```
+
 
 ```{r}
 three.layers <- two.layers+
@@ -102,6 +130,7 @@ add.x.var <- function(df, x.var){
     theme(panel.margin=grid::unit(0, "lines"))
   
   scatterfirst
+  #animint(scatterfirst)
 ```
 
 
@@ -135,7 +164,7 @@ threepanelsvisual <- list(
 threepanelsvisual
 ```
 
-## Exercises
+## More Exercises
 
 Visualize a different type of data not present in the animint2 Manual. 
 
@@ -241,12 +270,13 @@ wolfplot <- ggplot() +
   geom_point(data=wolves_US, aes(long,lat,size=pack.size,color=pack.size), shape=5) + theme_minimal()+
   labs(title = "Distribution of Wolves in Lower 48 US states by Pack Size", x = "Longitude", y="Latitude")
 
-wolfplot
+  # devtools::install_github('rOpenSci/gistr')
+  # animint2gist(animint(wolfplot))   # Applies animint to wolfplot, opens link to bl.ocks.org.
+  wolfplot
+
 ```
 
-```{r}
 
-```
 
 
 

@@ -121,7 +121,7 @@ scatter1
 ![](Graphics-R-Program_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
 
 ```r
-#animint(scatter1)
+# animint2gist(animint(scatter1))  # Creates bl.ocks.org visual to display scatter1. 
 ```
 
 
@@ -147,8 +147,60 @@ two.layers
 ![](Graphics-R-Program_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
 
 ```r
-#(viz.two.layers <- animint(two.layers)) Generates an error: 'unitType' is not an exported object from 'namespace:grid'
+#(viz.two.layers <- animint(two.layers))
+#animint2gist(viz.two.layers)
 ```
+
+
+## Exercise: Switch fertility.rate and life.expectancy. 
+This requires us to create a different scatter plot, which we'll name scatterswitched.
+
+```r
+scatterswitched <- ggplot()+
+  geom_point(
+    mapping=aes(x=fertility.rate, y=life.expectancy, color=region),
+    data=WorldBank1975)
+scatterswitched
+```
+
+```
+## Warning: Removed 27 rows containing missing values (geom_point).
+```
+
+![](Graphics-R-Program_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+
+```r
+# animint2gist(animint(scatterswitched))  # Creates bl.ocks.org visual to display scatterswitched.
+```
+
+## Exercise continued: Here is the flipped scatterplot. 
+
+
+```r
+WorldBankBefore1975 <- subset(WorldBank, 1970 <= year & year <= 1975)
+two.layers.switched <- scatterswitched+
+  geom_path(aes(x=fertility.rate, y=life.expectancy, color=region,
+                group=country),
+            data=WorldBankBefore1975)
+
+two.layers.switched
+```
+
+```
+## Warning: Removed 27 rows containing missing values (geom_point).
+```
+
+```
+## Warning: Removed 162 rows containing missing values (geom_path).
+```
+
+![](Graphics-R-Program_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+
+```r
+#(viz.two.layers.switched <- animint(two.layers.switched))
+#animint2gist(viz.two.layers.switched)
+```
+
 
 
 ```r
@@ -172,7 +224,7 @@ three.layers
 ## Warning: Removed 27 rows containing missing values (geom_text).
 ```
 
-![](Graphics-R-Program_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+![](Graphics-R-Program_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
 
 
 ```r
@@ -192,7 +244,7 @@ two.layersstorage
 ## Warning: Removed 162 rows containing missing values (geom_path).
 ```
 
-![](Graphics-R-Program_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+![](Graphics-R-Program_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
 
 ```r
 two.layers$timeSeries
@@ -202,7 +254,7 @@ two.layers$timeSeries
 ## Warning: Removed 1183 rows containing missing values (geom_path).
 ```
 
-![](Graphics-R-Program_files/figure-html/unnamed-chunk-8-2.png)<!-- -->
+![](Graphics-R-Program_files/figure-html/unnamed-chunk-10-2.png)<!-- -->
 
 
 ```r
@@ -245,7 +297,11 @@ add.x.var <- function(df, x.var){
 ## Warning: Removed 1183 rows containing missing values (geom_path).
 ```
 
-![](Graphics-R-Program_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+![](Graphics-R-Program_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+
+```r
+  #animint(scatterfirst)
+```
 
 
 
@@ -299,9 +355,9 @@ threepanelsvisual
 ## Warning: Removed 422 rows containing missing values (geom_path).
 ```
 
-![](Graphics-R-Program_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+![](Graphics-R-Program_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
 
-## Exercises
+## More Exercises
 
 Visualize a different type of data not present in the animint2 Manual. 
 
@@ -516,7 +572,7 @@ map_projection <- get_map(bear_box, maptype = "terrain", source = "stamen")
 ggmap(map_projection)
 ```
 
-![](Graphics-R-Program_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
+![](Graphics-R-Program_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
 
 Build a final map that overlays the recorded observations of grizzly bears in Alaska.
 
@@ -524,7 +580,7 @@ Build a final map that overlays the recorded observations of grizzly bears in Al
 ggmap(map_projection) + geom_point(data = grizzly, aes(longitude,latitude), size=1, color = "blue") + labs(x = "Longitude", y= "Latitude", title = "Recorded Observations of Grizzly Bears in Alaska")
 ```
 
-![](Graphics-R-Program_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
+![](Graphics-R-Program_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
 
 Exercise 2: Wolves data. Load the data and evaluate its structure.
 
@@ -771,7 +827,7 @@ ggplot() +
   geom_sf(data=us_lower, size = 0.25) + theme_linedraw() + labs(title = "US State Boundaries")
 ```
 
-![](Graphics-R-Program_files/figure-html/unnamed-chunk-23-1.png)<!-- -->
+![](Graphics-R-Program_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
 
 Use the relimited data to plot the distribution of wolf populations in the lower 48 US states.
 
@@ -787,7 +843,7 @@ ggplot() +
   theme_minimal()
 ```
 
-![](Graphics-R-Program_files/figure-html/unnamed-chunk-24-1.png)<!-- -->
+![](Graphics-R-Program_files/figure-html/unnamed-chunk-26-1.png)<!-- -->
 
 
 Average pack size for the wolves in this study by region:
@@ -831,10 +887,12 @@ wolfplot <- ggplot() +
   geom_point(data=wolves_US, aes(long,lat,size=pack.size,color=pack.size), shape=5) + theme_minimal()+
   labs(title = "Distribution of Wolves in Lower 48 US states by Pack Size", x = "Longitude", y="Latitude")
 
-wolfplot
+  # devtools::install_github('rOpenSci/gistr')
+  # animint2gist(animint(wolfplot))   # Applies animint to wolfplot, opens link to bl.ocks.org.
+  wolfplot
 ```
 
-![](Graphics-R-Program_files/figure-html/unnamed-chunk-26-1.png)<!-- -->
+![](Graphics-R-Program_files/figure-html/unnamed-chunk-28-1.png)<!-- -->
 
 
 
