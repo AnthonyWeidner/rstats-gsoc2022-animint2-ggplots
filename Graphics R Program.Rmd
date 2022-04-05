@@ -1,6 +1,8 @@
 ---
 title: "Interactive ggplots"
-output: html_document
+output: 
+  html_document: 
+    keep_md: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -101,8 +103,6 @@ add.x.var <- function(df, x.var){
   
   scatterfirst
 ```
-
-
 
 
 ```{r}
