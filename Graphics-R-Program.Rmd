@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE)
 #if(!require("remotes"))install.packages("remotes")
 #remotes:install_github("tdhock/animint2")
 #install.packages("remote")
-install.packages("gistr")
+#install.packages("gistr")
 ```
 
 
@@ -89,7 +89,8 @@ two.layers.switched <- scatterswitched+
             data=WorldBankBefore1975)
 
 two.layers.switched
-#(viz.two.layers.switched <- animint(two.layers.switched))
+
+(viz.two.layers.switched <- animint(two.layers.switched))
 #animint2gist(viz.two.layers.switched)
 ```
 
@@ -273,10 +274,23 @@ wolfplot <- animint(ggplot() +
   labs(title = "Distribution of Wolves in Lower 48 US states by Pack Size", x = "Longitude", y="Latitude"))
 
   #devtools::install_github('rOpenSci/gistr')
-  animint2gist(wolfplot)   # Applies animint to wolfplot, opens link to bl.ocks.org.
+  #animint2gist(wolfplot)   # Applies animint to wolfplot, opens link to bl.ocks.org.
   wolfplot
 
 ```
+
+```{r}
+#library(curl)   #Note: This is an attempt to have animint2gist() produce a non-blank graphic.
+#d3 <- "https://github.com/mbostock/d3/archive/v3.0.6.zip"
+#tmp <- tempfile()
+#curl::curl_download(d3, tmp, mode = "wb")
+#unzip(tmp)
+#unlink(tmp)
+
+#library(gistr)
+#gistr::gist_create(files = "d3-3.0.6/d3.js")
+```
+
 
 
 

@@ -15,6 +15,7 @@ output:
 #if(!require("remotes"))install.packages("remotes")
 #remotes:install_github("tdhock/animint2")
 #install.packages("remote")
+#install.packages("gistr")
 ```
 
 
@@ -27,6 +28,7 @@ library(here)
 library(ggmap)
 library(albersusa)
 library(skimr)
+library(gistr)
 ```
 
 
@@ -197,7 +199,20 @@ two.layers.switched
 ![](Graphics-R-Program_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
 
 ```r
-#(viz.two.layers.switched <- animint(two.layers.switched))
+(viz.two.layers.switched <- animint(two.layers.switched))
+```
+
+
+<script type="text/javascript" src="unnamedchunk8/vendor/d3.v3.js"></script>
+<script type="text/javascript" src="unnamedchunk8/animint.js"></script>
+<script type="text/javascript" src="unnamedchunk8/vendor/jquery-1.11.3.min.js"></script>
+<script type="text/javascript" src="unnamedchunk8/vendor/selectize.min.js"></script>
+<link rel="stylesheet" type="text/css" href="unnamedchunk8/vendor/selectize.css" />
+<p></p>
+<div id='unnamedchunk8'></div>
+<script>var unnamedchunk8 = new animint("#unnamedchunk8", "unnamedchunk8/plot.json");</script>
+
+```r
 #animint2gist(viz.two.layers.switched)
 ```
 
@@ -882,17 +897,33 @@ wolves %>%
 Make a new map that shows the distribution of wolves in the lower 48 US states but which has the size of location markers adjusted by pack size.
 
 ```r
-wolfplot <- ggplot() +
+wolfplot <- animint(ggplot() +
   geom_sf(data=us_lower, size=0.2) + 
   geom_point(data=wolves_US, aes(long,lat,size=pack.size,color=pack.size), shape=5) + theme_minimal()+
-  labs(title = "Distribution of Wolves in Lower 48 US states by Pack Size", x = "Longitude", y="Latitude")
+  labs(title = "Distribution of Wolves in Lower 48 US states by Pack Size", x = "Longitude", y="Latitude"))
 
-  # devtools::install_github('rOpenSci/gistr')
-  # animint2gist(animint(wolfplot))   # Applies animint to wolfplot, opens link to bl.ocks.org.
+  #devtools::install_github('rOpenSci/gistr')
+  #animint2gist(wolfplot)   # Applies animint to wolfplot, opens link to bl.ocks.org.
   wolfplot
 ```
 
-![](Graphics-R-Program_files/figure-html/unnamed-chunk-28-1.png)<!-- -->
+<p></p>
+<div id='unnamedchunk28'></div>
+<script>var unnamedchunk28 = new animint("#unnamedchunk28", "unnamedchunk28/plot.json");</script>
+
+
+```r
+#library(curl)   #Note: This is an attempt to have animint2gist() produce a non-blank graphic.
+#d3 <- "https://github.com/mbostock/d3/archive/v3.0.6.zip"
+#tmp <- tempfile()
+#curl::curl_download(d3, tmp, mode = "wb")
+#unzip(tmp)
+#unlink(tmp)
+
+#library(gistr)
+#gistr::gist_create(files = "d3-3.0.6/d3.js")
+```
+
 
 
 
