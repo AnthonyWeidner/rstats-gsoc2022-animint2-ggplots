@@ -89,8 +89,8 @@ two.layers.switched <- scatterswitched+
             data=WorldBankBefore1975)
 
 two.layers.switched
-(viz.two.layers.switched <- animint(two.layers.switched))
-animint2gist(viz.two.layers.switched)
+#(viz.two.layers.switched <- animint(two.layers.switched))
+#animint2gist(viz.two.layers.switched)
 ```
 
 
@@ -130,9 +130,9 @@ add.x.var <- function(df, x.var){
     facet_grid(. ~ x.var, scales="free")+
     theme_bw()+
     theme(panel.margin=grid::unit(0, "lines"))
-  #remotes::install_github("ropensci/gistr")
+  
   scatterfirst
-  #animint2gist(animint(scatterfirst))
+  #animint(scatterfirst)
 ```
 
 
@@ -272,50 +272,12 @@ wolfplot <- ggplot() +
   geom_point(data=wolves_US, aes(long,lat,size=pack.size,color=pack.size), shape=5) + theme_minimal()+
   labs(title = "Distribution of Wolves in Lower 48 US states by Pack Size", x = "Longitude", y="Latitude")
 
-devtools::install_github('rOpenSci/gistr')
-
-  #if (!requireNamespace("servr")) install.packages("servr")
-#servr::httd("/private/var/folders/9w/682ybgls49v7709wt01wfzlm0000gn/T/RtmpuSodSH/file10dfb4b7e9564")
-  #get("auth_config", envir=gistr:::cache)$auth_token$credentials$access_token
-  #animint2dir(animint(wolfplot))   # Applies animint to wolfplot, opens link to bl.ocks.org.
+  #devtools::install_github('rOpenSci/gistr')
+  animint2gist(animint(wolfplot))   # Applies animint to wolfplot, opens link to bl.ocks.org.
   wolfplot
 
 ```
 
-```{r}
-#devtools::install_github('rOpenSci/gistr')
-gist_auth <- function(app = gistr_app, reauth = FALSE) {
- 
-  if (exists("auth_config", envir = cache) && !reauth) {
-    return(auth_header(cache$auth_config$auth_token$credentials$access_token))
-  }
-  pat <- Sys.getenv("GITHUB_PAT", "")
-  if (!identical(pat, "")) {
-    auth_config <- list(auth_token=list(credentials=list(access_token=pat)))
-  } else if (!interactive()) {
-    stop("In non-interactive environments, please set GITHUB_PAT env to a GitHub",
-         " access token (https://help.github.com/articles/creating-an-access-token-for-command-line-use)",
-         call. = FALSE)
-  } else  {
-    endpt <- httr::oauth_endpoints("github")
-    token <- httr::oauth2.0_token(endpt, app, scope = "gist", cache = !reauth)
-    auth_config <- httr::config(token = token)
-  }
-  cache$auth_config <- auth_config
-  auth_header(auth_config$auth_token$credentials$access_token)
-}
-
-auth_header <- function(x) list(Authorization = paste0("token ", x))
-
-cache <- new.env(parent = emptyenv())
-
-gistr_app <- httr::oauth_app(
-  "gistr_oauth",
-  "89ecf04527f70e0f9730",
-  "77b5970cdeda925513b2cdec40c309ea384b74b7"
-)
-
-```
 
 
 
