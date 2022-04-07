@@ -13,10 +13,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 #install.packages("animint2")#from CRAN (stable).
 ##OR from GitHub (development).
+#install.packages("remote")
 #if(!require("remotes"))install.packages("remotes")
 #remotes:install_github("tdhock/animint2")
-#install.packages("remote")
+
 #install.packages("gistr")
+#install.packages("albersusa")
+#install.packages("devtools")
 ```
 
 
@@ -26,9 +29,10 @@ library(tidyverse)
 library(janitor)
 library(here)
 library(ggmap)
-library(albersusa)
+#library(albersusa)
 library(skimr)
 library(gistr)
+library(devtools)
 ```
 
 ```{r}
@@ -50,7 +54,12 @@ scatter1 <- ggplot()+
     data=WorldBank1975)
 scatter1
 
-# animint2gist(animint(scatter1))  # Creates bl.ocks.org visual to display scatter1. 
+#devtools::install_github('rOpenSci/gistr')
+animint2gist(animint(scatter1))  # Creates bl.ocks.org visual to display scatter1. 
+```
+
+```{r}
+#remotes::install_github("ropensci/gistr", force = TRUE)
 ```
 
 
@@ -62,9 +71,26 @@ two.layers <- scatter1+
             data=WorldBankBefore1975)
 
 two.layers
-#(viz.two.layers <- animint(two.layers))
-#animint2gist(viz.two.layers)
+(viz.two.layers <- animint(two.layers))
+animint2gist(viz.two.layers)
 ```
+
+
+
+```{r}
+#install.packages("gistr")
+#remotes::install_github("ropensci/gistr")
+#library("gistr")
+#gist_auth()
+#Sys.setenv(GITHUB_PAT = "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")
+#remotes::install_github("sckott/gistr_oauth")
+#file <- system.file("examples", "stuff.md", package = "gistr")
+#gist_create(file, description='a new cool gist', browse = FALSE)
+```
+
+
+
+
 
 
 ## Exercise: Switch fertility.rate and life.expectancy. 
@@ -273,7 +299,7 @@ wolfplot <- animint(ggplot() +
   geom_point(data=wolves_US, aes(long,lat,size=pack.size,color=pack.size), shape=5) + theme_minimal()+
   labs(title = "Distribution of Wolves in Lower 48 US states by Pack Size", x = "Longitude", y="Latitude"))
 
-  #devtools::install_github('rOpenSci/gistr')
+  
   #animint2gist(wolfplot)   # Applies animint to wolfplot, opens link to bl.ocks.org.
   wolfplot
 
