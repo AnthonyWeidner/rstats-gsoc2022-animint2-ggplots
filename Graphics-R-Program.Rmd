@@ -82,8 +82,6 @@ animint2gist(viz.two.layers)
 #remotes::install_github("ropensci/gistr")
 #library("gistr")
 #gist_auth()
-#Sys.setenv(GITHUB_PAT = "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")
-#remotes::install_github("sckott/gistr_oauth")
 #file <- system.file("examples", "stuff.md", package = "gistr")
 #gist_create(file, description='a new cool gist', browse = FALSE)
 ```
@@ -100,13 +98,9 @@ scatterswitched <- ggplot()+
   geom_point(
     mapping=aes(x=fertility.rate, y=life.expectancy, color=region),
     data=WorldBank1975)
-scatterswitched
-
-# animint2gist(animint(scatterswitched))  # Creates bl.ocks.org visual to display scatterswitched.
 ```
 
 ## Exercise continued: Here is the flipped scatterplot. 
-
 ```{r}
 WorldBankBefore1975 <- subset(WorldBank, 1970 <= year & year <= 1975)
 two.layers.switched <- scatterswitched+
@@ -114,10 +108,10 @@ two.layers.switched <- scatterswitched+
                 group=country),
             data=WorldBankBefore1975)
 
-two.layers.switched
+viz.two.layers.switched
 
-(viz.two.layers.switched <- animint(two.layers.switched))
-#animint2gist(viz.two.layers.switched)
+viz.two.layers.switched <- animint(two.layers.switched)
+animint2gist(viz.two.layers.switched)
 ```
 
 

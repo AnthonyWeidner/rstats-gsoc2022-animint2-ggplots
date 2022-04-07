@@ -191,3 +191,8 @@ animint(
     scale_size_animint(pixel.range=c(2,20), breaks=10^(4:9)))
 ```
 
+
+```{r}
+?animint
+```
+
