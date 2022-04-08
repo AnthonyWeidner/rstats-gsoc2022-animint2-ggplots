@@ -8,6 +8,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
+
+
+
 ```{r}
 if(!requireNamespace("animint2")){
   if(!requireNamespace("remotes"))install.packages("remotes")
@@ -76,6 +79,7 @@ summary(viz.two.plots)
 
 ```{r}
 viz.two.plots
+animint2gist(viz.two.plots)
 ```
 
 ```{r}
@@ -97,6 +101,15 @@ add.x.var <- function(df, x.var){
     theme(panel.margin=grid::unit(0, "lines"))
   ))
 ```
+
+
+```{r}
+curl::curl_download
+gistr::gist_create(files = "d3-3.0.6/d3.js")
+```
+
+
+
 
 ```{r}
 show.point.list <- list()
@@ -140,6 +153,10 @@ viz <- list(petal=ggplot()+
                         clickSelects=id), data=iris))
 animint2gist(viz, description = "My animint plot")
 ```
+
+
+
+
 
 ```{r}
 library(animint2)

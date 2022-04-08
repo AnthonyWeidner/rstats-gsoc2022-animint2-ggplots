@@ -48,12 +48,26 @@ head(WorldBank1975)
 
 
 ```{r}
+library(curl)
+d3 <- "https://github.com/mbostock/d3/archive/v3.0.6.zip"
+tmp <- tempfile()
+curl::curl_download(d3, tmp, mode = "wb")
+unzip(tmp)
+unlink(tmp)
+
+library(gistr)
+gistr::gist_create(files = "d3-3.0.6/d3.js")
+```
+
+
+```{r}
 scatter1 <- ggplot()+
   geom_point(
     mapping=aes(x=life.expectancy, y=fertility.rate, color=region),
     data=WorldBank1975)
 scatter1
 
+animint(scatter1)
 #devtools::install_github('rOpenSci/gistr')
 animint2gist(animint(scatter1))  # Creates bl.ocks.org visual to display scatter1. 
 ```
