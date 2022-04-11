@@ -73,6 +73,21 @@ viz.two.plots$timeSeries <- ggplot()+
             data=WorldBank)
 ```
 
+
+
+```{r}
+library(curl)
+d3 <- "https://github.com/mbostock/d3/archive/v3.0.6.zip"
+tmp <- tempfile()
+curl::curl_download(d3, tmp, mode = "wb")
+unzip(tmp)
+unlink(tmp)
+
+library(gistr)
+gistr::gist_create(files = "d3-3.0.6/d3.js")
+```
+
+
 ```{r}
 summary(viz.two.plots)
 ```
