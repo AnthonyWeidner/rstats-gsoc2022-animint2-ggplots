@@ -21,7 +21,6 @@ knitr::opts_chunk$set(echo = TRUE)
 #install.packages("devtools")
 ```
 
-
 ```{r message=FALSE, warning=FALSE}
 library(animint2)
 library(tidyverse)
@@ -57,7 +56,6 @@ gistr::gist_create(files = "d3-3.0.6/d3.js")
 ```
 
 ```{r}
-library(png)
 scatter1 <- ggplot()+
   geom_point(
     mapping=aes(x=life.expectancy, y=fertility.rate, color=region),
@@ -110,7 +108,7 @@ two.layers.switched <- scatterswitched+
                 group=country),
             data=WorldBankBefore1975)
 
-two.layers.switched
+animint2gist(animint(two.layers.switched))
 ```
 
 ```{r}
