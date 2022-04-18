@@ -1,0 +1,374 @@
+```{r}
+devtools::install_deps(dependencies = TRUE)
+devtools::install_github("faizan-khan-iit/ggplot2@5fb99d0cece13239bbbc09c6b8a7da7f86ac58e2")
+devtools::install()
+setwd("tests"); source("testthat.R")
+```
+
+```{r}
+library("animint2")
+library("RSelenium")
+library("testthat")
+```
+
+```{r}
+OS <- Sys.info()[['sysname']]
+    if(OS == "Linux") {
+      animint_server <- "localhost"
+    }
+    if(OS == "Windows") {
+      animint_server <- "host.docker.internal"
+    }
+
+  if (browserName == "phantomjs") {
+    message("Starting phantomjs binary. To shut it down, run: \n pJS$stop()")
+    
+    pJS <<- wdman::phantomjs(
+                  port = 4444L,
+                  phantomver = "latest"
+                )
+    
+    animint_server <- "localhost"
+    Sys.sleep(6)  
+  }
+  
+  remDr <<- RSelenium::remoteDriver(
+    port = 4444L,
+    browser = browserName,
+  )
+
+```
+
+
+```{r}
+filter <- Sys.getenv("TEST_SUITE")
+dont.need.browser <- grepl("compiler", filter)
+use.browser <- !dont.need.browser
+if(filter == ""){
+  filter <- NULL
+}
+if(interactive()){
+  setwd("testthat")
+  source("helper-functions.R")
+  tests_init("firefox")
+}
+
+if(use.browser)tests_init()
+tests_run(filter=filter)
+if(use.browser)tests_exit()
+```
+
+```{r}
+animint2HTML <- function(plotList) {
+  res <- animint2dir(plotList, out.dir = "animint-htmltest", 
+                     open.browser = FALSE)
+  remDr$refresh()
+  res$html <- getHTML()
+  res
+}
+
+clickHTML <- function(...){
+  v <- c(...)
+  stopifnot(length(v) == 1)
+  e <- remDr$findElement(names(v), as.character(v))
+  e$clickElement()
+  Sys.sleep(1)
+  getHTML()
+}
+
+clickID <- function(...){
+  v <- c(...)
+  stopifnot(length(v) == 1)
+  e <- remDr$findElement("id", as.character(v))
+  e$clickElement()
+}
+
+getHTML <- function(){
+  XML::htmlParse(remDr$getPageSource(), asText = TRUE)
+}
+
+expect_transform <- function(actual, expected, context = "translate", tolerance = 5) {
+  # supports multiple contexts
+  nocontext <- gsub(paste(context, collapse = "||"), "", actual)
+  # reduce to some 'vector' of numbers: (a, b, c, ...)
+  vec <- gsub("\\)\\(", ",", nocontext)
+  clean <- gsub("\\)", "", gsub("\\(", "", vec))
+  nums <- as.numeric(strsplit(clean, split = "\\,")[[1]])
+  expect_equal(nums, expected, tolerance, scale = 1)
+}
+
+expect_links <- function(html, urls){
+  expect_attrs(html, "a", "href", urls)
+}
+
+expect_attrs <- function(html, element.name, attr.name, urls){
+  stopifnot(is.character(urls))
+  xpath <- paste0("//", element.name)
+  pattern <- paste0(attr.name, "$")
+  node.set <- getNodeSet(html, xpath)
+  rendered.urls <- rep(NA, length(node.set))
+  for(node.i in seq_along(node.set)){
+    node <- node.set[[node.i]]
+    node.attrs <- xmlAttrs(node)
+    href.i <- grep(pattern, names(node.attrs))
+    if(length(href.i)==1){
+      rendered.urls[[node.i]] <- node.attrs[[href.i]]
+    }
+  }
+  for(u in urls){
+    expect_true(u %in% rendered.urls)
+  }
+}
+
+expect_styles <- function(html, styles.expected){
+  stopifnot(is.list(styles.expected))
+  stopifnot(!is.null(names(styles.expected)))
+  geom <- getNodeSet(html, '//*[@class="geom"]')
+  style.strs <- as.character(sapply(geom, function(x) xmlAttrs(x)["style"]))
+  pattern <-
+    paste0("(?<name>\\S+?)",
+           ": *",
+           "(?<value>.+?)",
+           ";")
+  style.matrices <- str_match_all_perl(style.strs, pattern)
+  for(style.name in names(styles.expected)){
+    style.values <- sapply(style.matrices, function(m)m[style.name, "value"])
+    for(expected.regexp in styles.expected[[style.name]]){
+      expect_match(style.values, expected.regexp, all=FALSE)
+    }
+  }
+}
+
+# Parsing expected values.
+str_match_perl <- function(string,pattern){
+  stopifnot(is.character(string))
+  stopifnot(is.character(pattern))
+  stopifnot(length(pattern)==1)
+  parsed <- regexpr(pattern,string,perl=TRUE)
+  captured.text <- substr(string,parsed,parsed+attr(parsed,"match.length")-1)
+  captured.text[captured.text==""] <- NA
+  captured.groups <- do.call(rbind,lapply(seq_along(string),function(i){
+    st <- attr(parsed,"capture.start")[i,]
+    if(is.na(parsed[i]) || parsed[i]==-1)return(rep(NA,length(st)))
+    substring(string[i],st,st+attr(parsed,"capture.length")[i,]-1)
+  }))
+  result <- cbind(captured.text,captured.groups)
+  colnames(result) <- c("",attr(parsed,"capture.names"))
+  result
+}
+
+
+str_match_all_perl <- function(string,pattern){
+  stopifnot(is.character(string))
+  stopifnot(is.character(pattern))
+  stopifnot(length(pattern)==1)
+  parsed <- gregexpr(pattern,string,perl=TRUE)
+  lapply(seq_along(parsed),function(i){
+    r <- parsed[[i]]
+    starts <- attr(r,"capture.start")
+    if(r[1]==-1)return(matrix(nrow=0,ncol=1+ncol(starts)))
+    names <- attr(r,"capture.names")
+    lengths <- attr(r,"capture.length")
+    full <- substring(string[i],r,r+attr(r,"match.length")-1)
+    subs <- substring(string[i],starts,starts+lengths-1)
+    m <- matrix(c(full,subs),ncol=length(names)+1)
+    colnames(m) <- c("",names)
+    if("name" %in% names){
+      rownames(m) <- m[, "name"]
+    }
+    m
+  })
+}
+
+getTextValue <- function(tick)xmlValue(getNodeSet(tick, "text")[[1]])
+getTransform <- function(tick)xmlAttrs(tick)[["transform"]]
+
+getTickDiff <- function(doc, ticks = c(1, 2), axis = "x"){
+  g.ticks <- getNodeSet(doc, "g[@class='tick major']")
+  tick.labs <- sapply(g.ticks, getTextValue)
+  names(g.ticks) <- tick.labs
+  g.ticks <- g.ticks[ticks]
+  tick.transform <- sapply(g.ticks, getTransform)
+  expr <- if (axis == "x") "translate[(](.*?),.*" else "translate[(][0-9]+?,(.*)[)]"
+  txt <- sub(expr, "\\1", tick.transform)
+  num <- as.numeric(txt)
+  val <- abs(diff(num))
+  attr(val, "label-diff") <- diff(as.numeric(names(tick.transform)))
+  val
+}
+both.equal <- function(x, tolerance = 0.1){
+  if(is.null(x) || !is.vector(x) || length(x) != 2){
+    return(FALSE)
+  }
+  isTRUE(all.equal(x[[1]], x[[2]], tolerance))
+}
+
+normDiffs <- function(xdiff, ydiff, ratio = 1) {
+  xlab <- attr(xdiff, "label-diff")
+  ylab <- attr(ydiff, "label-diff")
+  if (is.null(xlab) || is.null(ylab)) warning("label-diff attribute is missing")
+  c(ratio * xdiff / xlab, ydiff / ylab)
+}
+
+getTicks <- function(html, p.name){
+  xp <- sprintf('//svg[@id="%s"]//g[@id="xaxis"]//text', p.name)
+  nodes <- getNodeSet(html, xp)
+  stopifnot(length(nodes) > 0)
+  sapply(nodes, xmlAttrs)
+}
+
+expect_rotate_anchor <- function(info, rotate, anchor){
+  not <- getTicks(info$html, 'not')
+  expect_match(not["style", ], "text-anchor: middle", fixed=TRUE)
+  expect_match(not["transform", ], "rotate(0", fixed=TRUE)
+  rotated <- getTicks(info$html, 'rotated')
+  expect_match(rotated["style", ], paste("text-anchor:", anchor), fixed=TRUE)
+  expect_match(rotated["transform", ], paste0("rotate(", rotate), fixed=TRUE)
+  tick_box <- remDr$executeScript('return document.getElementById("xaxis").firstChild.getBoundingClientRect()')
+  title_box <- remDr$executeScript('return document.getElementById("xtitle").getBoundingClientRect()')
+  expect_true(title_box$top >= tick_box$bottom)
+}
+```
+
+```{r}
+# ANIMINT TO TEST (FROM MEDIUM TEST):
+
+# Libraries
+library(devtools)
+library(dplyr)
+library(data.table)
+library(gistr)
+library(comprehenr)
+library(graphics)
+library(animint2)
+
+# Initializations
+plotdimension.w <- 1
+plotdimension.wfrag <- 500
+increment <- 0.035
+flips <- 100
+width <- 500 
+height <- 400
+plotdimension.h <- 3
+segmentspercoin = 3
+plotdimension.hfrag <- 133.33
+
+# coinfloor() simulates "dropping" a coin to randomly generate heads/tails.
+# definecoin() explicitly defines a coin using the dimensions of the animint frame. 
+dimensionfactor <- to_vec(for (i in 0:2) 
+  i * (i + 1) / 2)
+coinfloor <- function(a) {
+  cut(a, dimensionfactor, labels = FALSE, right = TRUE)
+  }
+definecoin <- function(center = c(0, 0), coindatapoints = 16, group, iteration = 1, coindiameter = 416.67) {
+  coinradius = coindiameter / 2
+  angleradians <- seq(0, pi*2, length.out = coindatapoints)
+  coinlong <- center[1] + coinradius * cos(angleradians)
+  coinheight <- center[2] + coinradius * sin(angleradians)
+  return(data.frame(
+    x = coinlong,
+    y = coinheight,
+    group = group,
+    iteration = iteration
+  ))
+}
+
+# Iterate through flips and define function to simulate a coin to flip. 
+coinflipcycling <-data.table("coin" = (rep(c(1, 0), c(flips - 2, 2))))
+coinflipcycling[, paste0("coin", 2:4) := rep(0, flips)]
+randomresult <- c(0, 1) 
+for (i in 1:flips) {
+  for (j in 3:1) {
+    coinfloor.j <- coinfloor(j)
+    if (coinflipcycling[i, ..j] == 1 & coinfloor.j != 2) {
+      throw_coin_in_air <- sample(randomresult, prob = c(0.5, 0.5), replace = TRUE, size = 1)
+      if (throw_coin_in_air == 0) {
+        coinflipcycling[i + 1, j + coinfloor.j] <- 1}
+      else {
+        coinflipcycling[i + 1, j + coinfloor.j + 1] <- 1}
+    }
+  }
+}
+simulatecoinflip <- function(indivcoin) {
+  coinfloor.circle <- coinfloor(indivcoin)
+  ht <- (plotdimension.h - coinfloor.circle - 0.5) * plotdimension.hfrag
+  storage <- 1 - coinfloor.circle
+  initial.length <- 250 + storage * plotdimension.wfrag
+  coin_air <- coinfloor.circle * (coinfloor.circle - 1) / 2
+  coin_ground <- indivcoin - coin_air - 1
+  coin.floorlength <- initial.length + plotdimension.wfrag * 2 * coin_ground
+  return (c(coin.floorlength, ht))
+}
+
+# Create the structure to store coin flip stimulation data.
+coinflipdata <-
+  data.table(
+    x = numeric(),
+    y = numeric(),
+    group = numeric(),
+    iteration = numeric()
+  )
+for (x in 1:3) {
+  center = simulatecoinflip(x)
+  for (y in 1:flips) {
+    if (coinflipcycling[y, ..x] == 1) {
+      coinflipdata <- rbind(coinflipdata, definecoin(center, x, y)) }
+  }
+}
+
+# Preparing the plot to show the coin flip simulation results.
+length_label <- seq(1, 2) * 2 * 500 - 0.5 * 500
+height_label <- seq(-height / 20, -height / 20, 2)
+basis <- seq(1, 2)
+data_to_label <-
+  data.table(x = length_label, y = height_label, label = basis)
+
+# Processing and constructing plot data using cumulative sum of coin flips.
+construct_data <- 2:3
+coinflipcounter <- cumsum(coinflipcycling[, ..construct_data])
+coinflipcounter <- cbind(coinflipcounter, iteration = rownames(coinflipcounter))
+construct_data_combined <-
+  melt(coinflipcounter, id.vars = "iteration", variable.name = "numflipresults")
+construct_data_combined$iteration <- as.numeric((construct_data_combined$iteration))
+
+# Build the plot: viz. 
+limitflips <- max(construct_data_combined$value)
+labeltext_y <- seq(-0.1 * limitflips, -0.1 * limitflips, 2)
+data_to_label$labeltext_y <- labeltext_y
+viz <- ggplot() +
+  theme_animint(width = 500, height = 400) +
+  theme(panel.border = element_rect(color = "black",fill = NA, size = 15), panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),   axis.ticks = element_blank(),axis.title = element_blank(), axis.line = element_blank(),axis.text = element_blank()) +
+  geom_bar(aes(x = numflipresults, y = value,group = numflipresults), data = construct_data_combined, fill = "deepskyblue1", showSelected = "iteration", position = "identity", stat = "identity", color = "black") +
+  geom_text(data = data_to_label, aes(x = label, y = labeltext_y, label = label, group = label), size = 14) +
+  geom_text(data = construct_data_combined, aes(x = numflipresults, y = value + increment * limitflips, label = value, group = numflipresults), size = 14, showSelected = "iteration")+   scale_colour_identity() +
+  scale_fill_identity() 
+
+
+# viz_animint <- animint(viz, time = list(variable = "iteration", ms = 80), first = list(iteration = 1))
+# animint2dir(viz_animint)
+```
+
+```{r}
+# Testing whether the amount of coin flips is correctly interpreted in the animint. 
+test_that("Number of coin flip trials is what's expected", {
+  viztestingcoinflips <- animint2dir(viz_animint, open.browser=FALSE)
+  expect_identical(flips, as.character(1:100))
+```
+
+```{r}
+# Test if animint2gist() returns a gist
+context("gists")
+
+test_that("animint2gist() returns a gist", {
+  coinflipsimulator_gist <- animint2gist(viz_animint)
+  expect_is(g, "gist")
+  gistr::delete(g)
+})
+```
+
+
+```{r}
+tests_init()
+tests_run()
+```
+
