@@ -9,7 +9,6 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
 ```{r}
 #install.packages("animint2")#from CRAN (stable).
 ##OR from GitHub (development).
@@ -40,12 +39,10 @@ data(WorldBank, package="animint2")
 tail (WorldBank)
 ```
 
-
 ```{r}
 WorldBank1975 <- subset(WorldBank, year==1975)
 head(WorldBank1975)
 ```
-
 
 ```{r}
 library(curl)
@@ -59,7 +56,6 @@ library(gistr)
 gistr::gist_create(files = "d3-3.0.6/d3.js")
 ```
 
-
 ```{r}
 library(png)
 scatter1 <- ggplot()+
@@ -69,14 +65,12 @@ scatter1 <- ggplot()+
 scatter1
 
 animint(scatter1)
-#devtools::install_github('rOpenSci/gistr')
 animint2gist(animint(scatter1))  # Creates bl.ocks.org visual to display scatter1. 
 ```
 
 ```{r}
 #remotes::install_github("ropensci/gistr", force = TRUE)
 ```
-
 
 ```{r}
 WorldBankBefore1975 <- subset(WorldBank, 1970 <= year & year <= 1975)
@@ -90,8 +84,6 @@ two.layers
 animint2gist(viz.two.layers)
 ```
 
-
-
 ```{r}
 #install.packages("gistr")
 #remotes::install_github("ropensci/gistr")
@@ -100,11 +92,6 @@ animint2gist(viz.two.layers)
 #file <- system.file("examples", "stuff.md", package = "gistr")
 #gist_create(file, description='a new cool gist', browse = FALSE)
 ```
-
-
-
-
-
 
 ## Exercise: Switch fertility.rate and life.expectancy. 
 This requires us to create a different scatter plot, which we'll name scatterswitched.
@@ -125,7 +112,6 @@ two.layers.switched <- scatterswitched+
 
 two.layers.switched
 ```
-
 
 ```{r}
 three.layers <- two.layers+
@@ -168,7 +154,6 @@ add.x.var <- function(df, x.var){
   #animint(scatterfirst)
 ```
 
-
 ```{r}
 show.point.list <- list()
 show.path.list <- list()
@@ -181,7 +166,6 @@ for(show.year in c(1975, 1985, 1995)){
 show.point <- do.call(rbind, show.point.list)
 show.path <- do.call(rbind, show.path.list)
 ```
-
 
 ```{r}
 threepanelsvisual <- list(
@@ -198,7 +182,6 @@ threepanelsvisual <- list(
 
 threepanelsvisual
 ```
-
 ## More Exercises
 
 Visualize a different type of data not present in the animint2 Manual. 
@@ -310,21 +293,3 @@ wolfplot <- animint(ggplot() +
   wolfplot
 
 ```
-
-```{r}
-#library(curl)   #Note: This is an attempt to have animint2gist() produce a non-blank graphic.
-#d3 <- "https://github.com/mbostock/d3/archive/v3.0.6.zip"
-#tmp <- tempfile()
-#curl::curl_download(d3, tmp, mode = "wb")
-#unzip(tmp)
-#unlink(tmp)
-
-#library(gistr)
-#gistr::gist_create(files = "d3-3.0.6/d3.js")
-```
-
-
-
-
-
-
