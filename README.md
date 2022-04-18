@@ -11,3 +11,6 @@ I also developed an interactive shinyDashboard app as part of visualizing Univer
 
 ## Medium Test
 I implemented and translated flip.coin() into an animint. [Animation of coin flipping simulation](http://bl.ocks.org/AnthonyWeidner/raw/1b5acc50d6c8a70dc8dc037338593efe/) | [My Source Code](https://github.com/AnthonyWeidner/rstats-gsoc2022-animint2-ggplots/blob/main/Medium%20Test%20flip.coin()%20implementation%20.Rmd)
+
+## Hard Test
+I wrote some testthat unit tests based on my Animint visualization from the Medium Test. For instance, I wanted to test whether animint2gist() was actually returning an object of class "gist." I am also working on testing whether the number of coin flips done actually is interpreted correctly as 100 by using expect_identical(). I used the various testthat resources available on the animint GitHub. [Hard Test Source Code and Experimentation](https://github.com/AnthonyWeidner/rstats-gsoc2022-animint2-ggplots/blob/main/Hard%20Test%20(Unit%20Testing).Rmd)
