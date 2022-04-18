@@ -1,0 +1,118 @@
+```{r}
+# Anthony Weidner
+# GSoC 2022 flip.coin() implementation in Animint
+
+# Libraries
+library(devtools)
+library(dplyr)
+library(data.table)
+library(gistr)
+library(comprehenr)
+library(graphics)
+library(animint2)
+
+# Initializations
+plotdimension.w <- 1
+plotdimension.wfrag <- 500
+increment <- 0.035
+flips <- 100
+width <- 500 
+height <- 400
+plotdimension.h <- 3
+segmentspercoin = 3
+plotdimension.hfrag <- 133.33
+
+# coinfloor() simulates "dropping" a coin to randomly generate heads/tails.
+# definecoin() explicitly defines a coin using the dimensions of the animint frame. 
+dimensionfactor <- to_vec(for (i in 0:2) 
+  i * (i + 1) / 2)
+coinfloor <- function(a) {
+  cut(a, dimensionfactor, labels = FALSE, right = TRUE)
+  }
+definecoin <- function(center = c(0, 0), coindatapoints = 16, group, iteration = 1, coindiameter = 416.67) {
+  coinradius = coindiameter / 2
+  angleradians <- seq(0, pi*2, length.out = coindatapoints)
+  coinlong <- center[1] + coinradius * cos(angleradians)
+  coinheight <- center[2] + coinradius * sin(angleradians)
+  return(data.frame(
+    x = coinlong,
+    y = coinheight,
+    group = group,
+    iteration = iteration
+  ))
+}
+
+# Iterate through flips and define function to simulate a coin to flip. 
+coinflipcycling <-data.table("coin" = (rep(c(1, 0), c(flips - 2, 2))))
+coinflipcycling[, paste0("coin", 2:4) := rep(0, flips)]
+randomresult <- c(0, 1) 
+for (i in 1:flips) {
+  for (j in 3:1) {
+    coinfloor.j <- coinfloor(j)
+    if (coinflipcycling[i, ..j] == 1 & coinfloor.j != 2) {
+      throw_coin_in_air <- sample(randomresult, prob = c(0.5, 0.5), replace = TRUE, size = 1)
+      if (throw_coin_in_air == 0) {
+        coinflipcycling[i + 1, j + coinfloor.j] <- 1}
+      else {
+        coinflipcycling[i + 1, j + coinfloor.j + 1] <- 1}
+    }
+  }
+}
+simulatecoinflip <- function(indivcoin) {
+  coinfloor.circle <- coinfloor(indivcoin)
+  ht <- (plotdimension.h - coinfloor.circle - 0.5) * plotdimension.hfrag
+  storage <- 1 - coinfloor.circle
+  initial.length <- 250 + storage * plotdimension.wfrag
+  coin_air <- coinfloor.circle * (coinfloor.circle - 1) / 2
+  coin_ground <- indivcoin - coin_air - 1
+  coin.floorlength <- initial.length + plotdimension.wfrag * 2 * coin_ground
+  return (c(coin.floorlength, ht))
+}
+
+# Create the structure to store coin flip stimulation data.
+coinflipdata <-
+  data.table(
+    x = numeric(),
+    y = numeric(),
+    group = numeric(),
+    iteration = numeric()
+  )
+for (x in 1:3) {
+  center = simulatecoinflip(x)
+  for (y in 1:flips) {
+    if (coinflipcycling[y, ..x] == 1) {
+      coinflipdata <- rbind(coinflipdata, definecoin(center, x, y)) }
+  }
+}
+
+# Preparing the plot to show the coin flip simulation results.
+length_label <- seq(1, 2) * 2 * 500 - 0.5 * 500
+height_label <- seq(-height / 20, -height / 20, 2)
+basis <- seq(1, 2)
+data_to_label <-
+  data.table(x = length_label, y = height_label, label = basis)
+
+# Processing and constructing plot data using cumulative sum of coin flips.
+construct_data <- 2:3
+coinflipcounter <- cumsum(coinflipcycling[, ..construct_data])
+coinflipcounter <- cbind(coinflipcounter, iteration = rownames(coinflipcounter))
+construct_data_combined <-
+  melt(coinflipcounter, id.vars = "iteration", variable.name = "numflipresults")
+construct_data_combined$iteration <- as.numeric((construct_data_combined$iteration))
+
+# Build the plot: viz. 
+limitflips <- max(construct_data_combined$value)
+labeltext_y <- seq(-0.1 * limitflips, -0.1 * limitflips, 2)
+data_to_label$labeltext_y <- labeltext_y
+viz <- ggplot() +
+  theme_animint(width = 500, height = 400) +
+  theme(panel.border = element_rect(color = "black",fill = NA, size = 15), panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),   axis.ticks = element_blank(),axis.title = element_blank(), axis.line = element_blank(),axis.text = element_blank()) +
+  geom_bar(aes(x = numflipresults, y = value,group = numflipresults), data = construct_data_combined, fill = "deepskyblue1", showSelected = "iteration", position = "identity", stat = "identity", color = "black") +
+  geom_text(data = data_to_label, aes(x = label, y = labeltext_y, label = label, group = label), size = 14) +
+  geom_text(data = construct_data_combined, aes(x = numflipresults, y = value + increment * limitflips, label = value, group = numflipresults), size = 14, showSelected = "iteration")+   scale_colour_identity() +
+  scale_fill_identity() 
+
+# Allow viz plot to be published onto bl.ocks.org link.
+viz_animint <- animint(viz, time = list(variable = "iteration", ms = 80), first = list(iteration = 1))
+animint2gist(viz_animint)
+```
