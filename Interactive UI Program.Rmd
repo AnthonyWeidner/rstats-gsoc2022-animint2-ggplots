@@ -40,6 +40,43 @@ naniar::miss_var_summary(UC_admit)
 ```
 
 
+
+```{r}
+ui <- dashboardPage(
+  dashboardHeader(title = "Diversity Across UC Enrollment"),
+  dashboardSidebar(disable = T),
+  dashboardBody(
+  fluidRow(
+  box(title = "Plot Options", width = 3,
+  selectInput("x", "Select Desired Variable", choices = c("Ethnicity", "Category", "Campus"), 
+              selected = "Campus"),
+      hr(),
+      helpText("Source: (https://www.universityofcalifornia.edu/infocenter).")
+  ), 
+  box(title = "Academic Year", width = 6,
+  plotOutput("plot", width = "600px", height = "500px")
+  ) 
+  ) 
+  ) 
+)
+
+server <- function(input, output, session) { 
+  
+  output$plot <- renderPlot({
+  UC_admit %>% 
+  ggplot(aes_string(x = "Academic_Yr", y="FilteredCountFR",fill = input$x)) +
+  geom_col(position = "dodge")+
+  theme_light(base_size = 18)
+  })
+  
+  session$onSessionEnded(stopApp)
+  }
+
+shinyApp(ui, server)
+```
+
+
+
 ## This app allows users to explore year, campus, and admit category as interactive variables.
 
 ```{r}
@@ -74,40 +111,3 @@ server <- function(input, output, session) {
 
 shinyApp(ui, server)
 ```
-
-## Alternate version
-
-```{r}
-ui <- dashboardPage(
-  dashboardHeader(title = "Diversity Across UC Enrollment"),
-  dashboardSidebar(disable = T),
-  dashboardBody(
-  fluidRow(
-  box(title = "Plot Options", width = 3,
-  selectInput("x", "Select Desired Variable", choices = c("Ethnicity", "Category", "Campus"), 
-              selected = "Campus"),
-      hr(),
-      helpText("Source: (https://www.universityofcalifornia.edu/infocenter). Data based on the years 2010-2019 for each UC campus.")
-  ), 
-  box(title = "Academic Year", width = 6,
-  plotOutput("plot", width = "600px", height = "500px")
-  ) 
-  ) 
-  ) 
-)
-
-server <- function(input, output, session) { 
-  
-  output$plot <- renderPlot({
-  UC_admit %>% 
-  ggplot(aes_string(x = "Academic_Yr", y="FilteredCountFR",fill = input$x)) +
-  geom_col(position = "dodge")+
-  theme_light(base_size = 18)
-  })
-  
-  session$onSessionEnded(stopApp)
-  }
-
-shinyApp(ui, server)
-```
-

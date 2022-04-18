@@ -61,6 +61,7 @@ gistr::gist_create(files = "d3-3.0.6/d3.js")
 
 
 ```{r}
+library(png)
 scatter1 <- ggplot()+
   geom_point(
     mapping=aes(x=life.expectancy, y=fertility.rate, color=region),
@@ -122,10 +123,7 @@ two.layers.switched <- scatterswitched+
                 group=country),
             data=WorldBankBefore1975)
 
-viz.two.layers.switched
-
-viz.two.layers.switched <- animint(two.layers.switched)
-animint2gist(viz.two.layers.switched)
+two.layers.switched
 ```
 
 
