@@ -110,7 +110,8 @@ viz <- ggplot() +
   geom_bar(aes(x = numflipresults, y = value,group = numflipresults), data = construct_data_combined, fill = "deepskyblue1", showSelected = "iteration", position = "identity", stat = "identity", color = "black") +
   geom_text(data = data_to_label, aes(x = label, y = labeltext_y, label = label, group = label), size = 14) +
   geom_text(data = construct_data_combined, aes(x = numflipresults, y = value + increment * limitflips, label = value, group = numflipresults), size = 14, showSelected = "iteration")+   scale_colour_identity() +
-  scale_fill_identity() 
+  scale_fill_identity() +
+  ggtitle ("Heads vs. Tails")
 
 # Allow viz plot to be published onto bl.ocks.org link.
 viz_animint <- animint(viz, time = list(variable = "iteration", ms = 80), first = list(iteration = 1))
